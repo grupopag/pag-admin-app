@@ -1,0 +1,8 @@
+{
+    "validations": {
+        "required": "Este campo é obrigatório",
+        "email": "Por favor, insira um email válido",
+        "minLength": "Este campo precisa ter no mínimo {min} caracteres",
+        "maxLength": "Este campo precisa ter no maximo {max}  caracteres"
+    }
+}
