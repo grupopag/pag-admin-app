@@ -2,7 +2,6 @@ export interface Estabelecimento {
   id?: number;
   nome: string;
   cnpj: string;
-  cpfResponsavel: string;
   cep: string;
   enteId?: number;
   uf: string;
@@ -16,4 +15,8 @@ export interface Estabelecimento {
   telefone: string;
   endereco: string;
   nomeResponsavel: string;
+  cpfResponsavel: string;
+  email: string;
+  senha: string;
+
 }
