@@ -314,6 +314,19 @@ onMounted(() => {});
   transition: all 0.3s ease;
   position: relative;
   overflow: hidden;
+  opacity: 0.8;
+}
+
+.v-tab:hover {
+  opacity: 1;
+  background-color: rgba(var(--v-theme-primary), 0.9);
+}
+
+.v-tab.v-tab--selected {
+  opacity: 1;
+  font-weight: bold;
+  background-color: rgba(var(--v-theme-primary), 1);
+  color: white !important;
 }
 
 .v-tab::before {
@@ -322,27 +335,13 @@ onMounted(() => {});
   bottom: 0;
   left: 0;
   width: 100%;
-  height: 2px;
+  height: 3px;
   background-color: transparent;
   transition: background-color 0.3s ease;
 }
 
-.v-tab:hover::before {
-  background-color: rgba(255, 255, 255, 0.7);
-}
-
 .v-tab.v-tab--selected::before {
   background-color: white;
-}
-
-.v-tab:hover {
-  transform: scale(1.05);
-  color: rgba(255, 255, 255, 0.9);
-}
-
-.v-tab.v-tab--selected {
-  font-weight: bold;
-  color: white;
 }
 
 .scrollable-card {
