@@ -32,7 +32,6 @@ const usuario = ref({
   confirmarSenha: "",
 });
 
-const emit = defineEmits(["success", "onError"]);
 
 const rules = {
   nome: { required },
@@ -77,11 +76,9 @@ async function salvar() {
       
       await EstabelecimentoService.save(dadosCompletos);
       
-      emit("success");
       $toast.success("Estabelecimento e usuário salvos com sucesso!");
     } catch (e) {
       $toast.error(erroUtils.getErrorMessage(e));
-      emit("onError", e);
     }
   }
 }
