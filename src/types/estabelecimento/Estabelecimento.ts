@@ -8,7 +8,7 @@ export interface Estabelecimento {
   percentualServico: number;
   valorCouvert?: number;
   ativarCouvert?: boolean;
-  chavePix?: string;
+  chavePix: string;
   dataCriacao?: string | Date;
   ultimaAtualizacao?: string;
   municipio: string;
