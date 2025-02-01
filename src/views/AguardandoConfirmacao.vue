@@ -5,7 +5,7 @@ import { ref } from 'vue';
 <template>
   <VContainer fluid fill-height>
     <VRow align="center" justify="center">
-      <VCol cols="12" sm="10" md="6" lg="5">
+      <VCol cols="12" sm="11" md="8" lg="6" xl="5">
         <VCard 
           elevation="2"
           class="pa-6 text-center"
