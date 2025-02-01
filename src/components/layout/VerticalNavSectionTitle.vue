@@ -17,7 +17,7 @@ function isActualPath(value: string) {
 
 <template>
   <div class="title-container">
-    <h2>Estabelecimentos</h2>
+    <h2>Cadastro</h2>
   </div>
   <div class="menu">
     <RouterLink
@@ -25,8 +25,8 @@ function isActualPath(value: string) {
       style="text-decoration: none"
       :class="['menu-item', { selected: isActualPath('estabelecimento') }]"
     >
-      <span class="icon">📥</span>
-      <span>Estabelecimento</span>
+      <span class="icon">📝</span>
+      <span>Novo Cadastro</span>
     </RouterLink>
   </div>
 </template>

@@ -7,6 +7,9 @@ import { useToast } from "vue-toast-notification";
 
 import * as erroUtils from "@/utils/erroUitls";
 import type { Estabelecimento } from "@/types/estabelecimento/Estabelecimento";
+import {useRouter} from "vue-router";
+
+const router = useRouter(); 
 
 const $toast = useToast();
 
@@ -23,7 +26,8 @@ const estabelecimento = ref<Estabelecimento>({
   cpfResponsavel: "",
   nomeResponsavel: "",
   email:"",
-  senha:""
+  senha:"",
+  chavePix: ""
 });
 
 const usuario = ref({
@@ -43,6 +47,7 @@ const rules = {
   telefone: { required },
   endereco: { required },
   nomeResponsavel: { required },
+  chavePix: { required } // Add Pix key field validation
 };
 
 const usuarioRules = {
@@ -62,11 +67,15 @@ const tab = ref('estabelecimento');
 const showPassword = ref(false);
 const showConfirmPassword = ref(false);
 
+const isLoading = ref(false);
+
 async function salvar() {
   v$.value.$touch();
   usuarioV$.value.$touch();
   
   if (v$.value.$errors.length === 0 && usuarioV$.value.$errors.length === 0) {
+    isLoading.value = true;
+
     try {
       // Combine estabelecimento and usuario data before saving
       const dadosCompletos = {
@@ -76,9 +85,13 @@ async function salvar() {
       
       await EstabelecimentoService.save(dadosCompletos);
       
-      $toast.success("Estabelecimento e usuário salvos com sucesso!");
+
+
+      router.push({ name: "aguardando-validacao" });
     } catch (e) {
       $toast.error(erroUtils.getErrorMessage(e));
+    } finally {
+      isLoading.value = false;
     }
   }
 }
@@ -94,17 +107,24 @@ onMounted(() => {});
     <VCardText class="scrollable-content">
       <VTabs 
         v-model="tab" 
-        bg-color="primary" 
-        color="white" 
+        bg-color="transparent" 
+        color="primary" 
         grow 
         show-arrows
         align-tabs="center"
+        class="custom-tabs"
       >
-        <VTab value="estabelecimento">
+        <VTab 
+          value="estabelecimento" 
+          class="custom-tab"
+        >
           <VIcon start icon="mdi-store" />
           Dados do Estabelecimento
         </VTab>
-        <VTab value="usuario">
+        <VTab 
+          value="usuario" 
+          class="custom-tab"
+        >
           <VIcon start icon="mdi-account" />
           Dados do Usuário
         </VTab>
@@ -191,15 +211,22 @@ onMounted(() => {});
           </VRow>
 
           <VRow>
-            <VCol md="4" cols="12">
+            <VCol md="6" cols="12">
               <VTextField
                 bg-color="#f0f0f0"
                 variant="outlined"
-                type="number"
+                placeholder="Chave Pix"
+                :error-messages="erroUtils.getErrosVuelidate(v$.chavePix.$errors)"
+                v-model="estabelecimento.chavePix"
+                label="Chave Pix"
+              />
+            </VCol>
+            <VCol md="6" cols="12">
+              <VTextField
+                bg-color="#f0f0f0"
+                variant="outlined"
                 placeholder="% Serviço"
-                :error-messages="
-                  erroUtils.getErrosVuelidate(v$.percentualServico.$errors)
-                "
+                :error-messages="erroUtils.getErrosVuelidate(v$.percentualServico.$errors)"
                 v-model="estabelecimento.percentualServico"
                 label="% Serviço"
               />
@@ -293,6 +320,8 @@ onMounted(() => {});
           style="min-width: 250px"
           variant="flat"
           color="primary"
+          :loading="isLoading"
+          :disabled="isLoading"
           @click="salvar"
         >
           Salvar
@@ -383,5 +412,23 @@ onMounted(() => {});
 
 .scrollable-content::-webkit-scrollbar-thumb:hover {
   background: rgba(var(--v-theme-primary), 0.9);
+}
+
+.custom-tabs {
+  background-color: #f0f0f0 !important;
+  border-radius: 8px;
+  margin-bottom: 20px;
+  padding: 4px;
+}
+
+.custom-tab {
+  border-radius: 6px;
+  transition: all 0.3s ease;
+}
+
+.custom-tab.v-tab--selected {
+  background-color: white;
+  color: rgb(var(--v-theme-primary)) !important;
+  box-shadow: 0 4px 6px rgba(0,0,0,0.1);
 }
 </style>
