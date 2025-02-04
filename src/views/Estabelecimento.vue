@@ -7,14 +7,14 @@ import { useToast } from "vue-toast-notification";
 
 import * as erroUtils from "@/utils/erroUitls";
 import type { Estabelecimento } from "@/types/estabelecimento/Estabelecimento";
-import {useRouter} from "vue-router";
+import { useRouter } from "vue-router";
 
-const router = useRouter(); 
+const router = useRouter();
 
 const $toast = useToast();
 
 const estabelecimento = ref<Estabelecimento>({
-  nome:"",
+  nome: "",
   cnpj: "",
   cep: "",
   uf: "",
@@ -25,9 +25,9 @@ const estabelecimento = ref<Estabelecimento>({
   enteId: 0,
   cpfResponsavel: "",
   nomeResponsavel: "",
-  email:"",
-  senha:"",
-  chavePix: ""
+  email: "",
+  senha: "",
+  chavePix: "",
 });
 
 const usuario = ref({
@@ -35,7 +35,6 @@ const usuario = ref({
   senha: "",
   confirmarSenha: "",
 });
-
 
 const rules = {
   nome: { required },
@@ -47,45 +46,71 @@ const rules = {
   telefone: { required },
   endereco: { required },
   nomeResponsavel: { required },
-  chavePix: { required } // Add Pix key field validation
+  chavePix: { required }, // Add Pix key field validation
 };
 
 const usuarioRules = {
   email: { required, email },
   senha: { required },
-  confirmarSenha: { 
-    required, 
-    sameAs: sameAs(computed(() => usuario.value.senha)) 
+  confirmarSenha: {
+    required,
+    sameAs: sameAs(computed(() => usuario.value.senha)),
   },
 };
 
 const v$ = useVuelidate(rules, estabelecimento);
 const usuarioV$ = useVuelidate(usuarioRules, usuario);
 
-const tab = ref('estabelecimento');
+const tab = ref("estabelecimento");
 
 const showPassword = ref(false);
 const showConfirmPassword = ref(false);
 
 const isLoading = ref(false);
+const isLoadingAddress = ref(false);
+
+const buscarEndereco = async (value: string) => {
+  const cepLimpo = value.replace(/\D/g, "");
+
+  if (cepLimpo.length < 8) return;
+
+  isLoadingAddress.value = true;
+
+  try {
+    const response = await fetch(`https://viacep.com.br/ws/${cepLimpo}/json/`);
+    const data = await response.json();
+
+    if (data.erro) {
+      $toast.error("CEP não encontrado");
+      return;
+    }
+
+    estabelecimento.value.endereco =
+      `${data.logradouro}, ${data.bairro}`.trim();
+    estabelecimento.value.municipio = data.localidade;
+    estabelecimento.value.uf = data.uf;
+  } catch (error) {
+    $toast.error("Erro ao buscar endereço");
+    console.error(error);
+  } finally {
+    isLoadingAddress.value = false;
+  }
+};
 
 async function salvar() {
   v$.value.$touch();
   usuarioV$.value.$touch();
-  
+
   if (v$.value.$errors.length === 0 && usuarioV$.value.$errors.length === 0) {
     isLoading.value = true;
 
     try {
-      // Combine estabelecimento and usuario data before saving
       const dadosCompletos = {
         ...estabelecimento.value,
-        ...usuario.value
+        ...usuario.value,
       };
-      
-      await EstabelecimentoService.save(dadosCompletos);
-      
 
+      await EstabelecimentoService.save(dadosCompletos);
 
       router.push({ name: "aguardando-validacao" });
     } catch (e) {
@@ -101,30 +126,23 @@ onMounted(() => {});
 
 <template>
   <VCard height="100%" class="scrollable-card">
-    <VToolbar prominent color="primary" dark title="Novo cadastro">
-    </VToolbar>
+    <VToolbar prominent color="primary" dark title="Novo cadastro"> </VToolbar>
 
     <VCardText class="scrollable-content">
-      <VTabs 
-        v-model="tab" 
-        bg-color="transparent" 
-        color="primary" 
-        grow 
+      <VTabs
+        v-model="tab"
+        bg-color="transparent"
+        color="primary"
+        grow
         show-arrows
         align-tabs="center"
         class="custom-tabs"
       >
-        <VTab 
-          value="estabelecimento" 
-          class="custom-tab"
-        >
+        <VTab value="estabelecimento" class="custom-tab">
           <VIcon start icon="mdi-store" />
           Dados do Estabelecimento
         </VTab>
-        <VTab 
-          value="usuario" 
-          class="custom-tab"
-        >
+        <VTab value="usuario" class="custom-tab">
           <VIcon start icon="mdi-account" />
           Dados do Usuário
         </VTab>
@@ -160,6 +178,7 @@ onMounted(() => {});
                 bg-color="#f0f0f0"
                 variant="outlined"
                 placeholder="CEP"
+                @update:modelValue="buscarEndereco"
                 :error-messages="erroUtils.getErrosVuelidate(v$.cep.$errors)"
                 v-model="estabelecimento.cep"
                 label="CEP"
@@ -170,9 +189,12 @@ onMounted(() => {});
                 bg-color="#f0f0f0"
                 variant="outlined"
                 placeholder="Município"
-                :error-messages="erroUtils.getErrosVuelidate(v$.municipio.$errors)"
+                :error-messages="
+                  erroUtils.getErrosVuelidate(v$.municipio.$errors)
+                "
                 v-model="estabelecimento.municipio"
                 label="Município"
+                :disabled="isLoadingAddress"
               />
             </VCol>
             <VCol md="3" cols="12">
@@ -183,6 +205,7 @@ onMounted(() => {});
                 :error-messages="erroUtils.getErrosVuelidate(v$.uf.$errors)"
                 v-model="estabelecimento.uf"
                 label="UF"
+                :disabled="isLoadingAddress"
               />
             </VCol>
           </VRow>
@@ -193,9 +216,12 @@ onMounted(() => {});
                 bg-color="#f0f0f0"
                 variant="outlined"
                 placeholder="Endereço"
-                :error-messages="erroUtils.getErrosVuelidate(v$.endereco.$errors)"
+                :error-messages="
+                  erroUtils.getErrosVuelidate(v$.endereco.$errors)
+                "
                 v-model="estabelecimento.endereco"
                 label="Endereço"
+                :disabled="isLoadingAddress"
               />
             </VCol>
             <VCol md="4" cols="12">
@@ -203,7 +229,9 @@ onMounted(() => {});
                 bg-color="#f0f0f0"
                 variant="outlined"
                 placeholder="Telefone"
-                :error-messages="erroUtils.getErrosVuelidate(v$.telefone.$errors)"
+                :error-messages="
+                  erroUtils.getErrosVuelidate(v$.telefone.$errors)
+                "
                 v-model="estabelecimento.telefone"
                 label="Telefone"
               />
@@ -216,7 +244,9 @@ onMounted(() => {});
                 bg-color="#f0f0f0"
                 variant="outlined"
                 placeholder="Chave Pix"
-                :error-messages="erroUtils.getErrosVuelidate(v$.chavePix.$errors)"
+                :error-messages="
+                  erroUtils.getErrosVuelidate(v$.chavePix.$errors)
+                "
                 v-model="estabelecimento.chavePix"
                 label="Chave Pix"
               />
@@ -226,7 +256,9 @@ onMounted(() => {});
                 bg-color="#f0f0f0"
                 variant="outlined"
                 placeholder="% Serviço"
-                :error-messages="erroUtils.getErrosVuelidate(v$.percentualServico.$errors)"
+                :error-messages="
+                  erroUtils.getErrosVuelidate(v$.percentualServico.$errors)
+                "
                 v-model="estabelecimento.percentualServico"
                 label="% Serviço"
               />
@@ -253,7 +285,6 @@ onMounted(() => {});
                 bg-color="#f0f0f0"
                 variant="outlined"
                 placeholder="CPF do Responsável"
-          
                 v-model="estabelecimento.cpfResponsavel"
                 label="CPF do Responsável"
               />
@@ -302,7 +333,9 @@ onMounted(() => {});
                 :error-messages="
                   erroUtils.getErrosVuelidate(usuarioV$.confirmarSenha.$errors)
                 "
-                :append-inner-icon="showConfirmPassword ? 'mdi-eye-off' : 'mdi-eye'"
+                :append-inner-icon="
+                  showConfirmPassword ? 'mdi-eye-off' : 'mdi-eye'
+                "
                 @click:append-inner="showConfirmPassword = !showConfirmPassword"
                 :type="showConfirmPassword ? 'text' : 'password'"
               />
@@ -356,7 +389,7 @@ onMounted(() => {});
 }
 
 .v-tab::before {
-  content: '';
+  content: "";
   position: absolute;
   bottom: 0;
   left: 0;
@@ -429,6 +462,6 @@ onMounted(() => {});
 .custom-tab.v-tab--selected {
   background-color: white;
   color: rgb(var(--v-theme-primary)) !important;
-  box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
 }
 </style>
