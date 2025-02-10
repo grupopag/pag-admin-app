@@ -248,7 +248,7 @@ onMounted(() => {});
                   erroUtils.getErrosVuelidate(v$.chavePix.$errors)
                 "
                 v-model="estabelecimento.chavePix"
-                label="Chave Pix"
+                label="Chave Pix (TAXA BANCÁRIA de 2,38%)"
               />
             </VCol>
             <VCol md="6" cols="12">

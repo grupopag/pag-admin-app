@@ -27,6 +27,13 @@ async function verificarToken() {
 }
 
 onMounted(() => {
+  const token = route.query.token as string;
+  
+  if (!token) {
+    router.push('/estabelecimento');
+    return;
+  }
+  
   verificarToken();
 });
 </script>
@@ -69,6 +76,15 @@ onMounted(() => {
                   tokenStatus === 'expirado' ? 'O link de confirmação expirou.' : 
                   'Ocorreu um erro ao verificar o token.' 
                 }}
+              </p>
+              <p v-if="tokenStatus === 'valido'" class="text-body-2 mt-2">
+                <a 
+                  href="https://rest.grupopag.com/pag-app-restaurante/" 
+                  target="_blank" 
+                  class="text-primary"
+                >
+                  Clique aqui para realizar login
+                </a>
               </p>
             </VCardText>
           </VCardItem>
