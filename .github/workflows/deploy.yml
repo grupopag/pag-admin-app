@@ -1,0 +1,56 @@
+name: Deploy Vue App (frontend/) para Caddy
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout do código
+        uses: actions/checkout@v3
+
+      - name: Instalar Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: '18'  # Ajuste se sua versão do Node for diferente
+
+      - name: Instalar dependências e buildar Vue
+        working-directory: .
+        run: |
+          npm install
+          npm run build
+
+      - name: Criar chave SSH
+        run: |
+          mkdir -p ~/.ssh
+          echo "${{ secrets.SSH_KEY }}" > ~/.ssh/id_rsa
+          chmod 600 ~/.ssh/id_rsa
+
+      - name: Adicionar host ao known_hosts
+        run: |
+          ssh-keyscan -H ${{ secrets.HOST }} >> ~/.ssh/known_hosts
+
+      - name: Criar pasta temporária no servidor
+        run: |
+          ssh ${{ secrets.USERNAME }}@${{ secrets.HOST }} "mkdir -p /tmp/admin-build"
+
+      - name: Enviar 'dist/' para o servidor (em /tmp)
+        run: |
+          scp -r ./dist/* ${{ secrets.USERNAME }}@${{ secrets.HOST }}:/tmp/admin-build
+
+      - name: Mover para /var/www/admin com sudo e ajustar permissões
+        run: |
+          ssh ${{ secrets.USERNAME }}@${{ secrets.HOST }} << 'EOF'
+            sudo rm -rf /var/www/admin/*
+            sudo cp -r /tmp/admin-build/* /var/www/admin/
+            sudo chown -R caddy:caddy /var/www/admin
+            rm -rf /tmp/admin-build
+          EOF
+
+      - name: (Opcional) Reiniciar Caddy
+        run: |
+          ssh ${{ secrets.USERNAME }}@${{ secrets.HOST }} 'sudo systemctl reload caddy || true'
