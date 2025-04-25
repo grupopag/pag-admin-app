@@ -8,8 +8,6 @@ export default (mode: any) => {
   process.env = { ...process.env, ...loadEnv(mode.mode, process.cwd()) };
 
   return defineConfig({
-    base: process.env.VITE_VUE_APP_PATH,
-
     plugins: [vue(), vueDevTools()],
     resolve: {
       alias: {
